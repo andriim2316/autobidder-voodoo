@@ -1,0 +1,9 @@
+<form id="claimBetForm-{{ entry.domain_id }}" class="bet-form d-flex align-items-center flex-nowrap" method="POST" action="{% url 'claim_bet' %}">
+    {% csrf_token %}
+    <input type="hidden" name="domain_id" value="{{ entry.domain_id }}">
+    <input type="hidden" name="expiration_date" value="{{ entry.expiration_date }}">
+    <input type="number" name="max_bet" class="form-control form-control-sm"
+           style="width: 70px; font-size: 12px;" required value="900"
+           min="900" step="50" oninput="validateMaxBet(this)">
+    <button type="submit" class="btn btn-primary btn-sm claim-btn">Claim</button>
+</form>

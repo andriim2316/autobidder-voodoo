@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block title %}Ahrefs Test{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2 class="mb-4">Ahrefs Test View</h2>
+
+    <!-- API Balance Section -->
+    {% if api_balance.error %}
+        <div class="alert alert-danger">Error: {{ api_balance.error }}</div>
+    {% else %}
+        <div class="alert alert-info">
+            <strong>API Balance:</strong> {{ api_balance.info.rows_left|default:"N/A" }} rows remaining
+            (Limit: {{ api_balance.info.rows_limit|default:"N/A" }}, Subscription: {{ api_balance.info.subscription|default:"N/A" }})
+        </div>
+    {% endif %}
+
+    <!-- Form to Fetch Data -->
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn btn-primary">Fetch Ahrefs Data</button>
+    </form>
+
+    <!-- Results Section -->
+    {% if results %}
+        <div class="mt-4">
+            <h3>Ahrefs Data</h3>
+            <a href="{% url 'download_ahrefs' 'csv' %}" class="btn btn-success mb-2">Download CSV</a>
+
+            <div class="table-responsive">
+    <table id="ahrefsTable" class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Domain Name</th>
+                {% for field in fields %}
+                    <th data-field="{{ field }}" class="sortable-column text-nowrap">
+                        {{ field|capfirst }} <span class="sort-indicator"></span>
+                    </th>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th></th>
+                {% for field in fields %}
+                    <th>
+                        <div class="d-flex">
+                            <select id="operator-{{ field }}" class="form-select form-select-sm" style="width: 54px;">
+                                <option value="greater">&gt;</option>
+                                <option value="equals">=</option>
+                                <option value="less">&lt;</option>
+                            </select>
+                            <input type="text" id="filter-{{ field }}" class="form-control form-control-sm" style="width: 50px;">
+                        </div>
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in results %}
+                <tr>
+                    <td data-field="domain">
+                        <a href="https://app.ahrefs.com/v2-site-explorer/overview?mode=subdomains&target={{ data.domain }}"
+                           target="_blank" rel="noopener noreferrer">
+                            {{ data.domain|default:"N/A" }}
+                        </a>
+                    </td>
+                    {% for field in fields %}
+                        <td data-field="{{ field }}">{{ data|get_item:field|default:"-" }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    console.log("Ahrefs Test View JS Loaded ✅");  // ✅ Confirm script execution
+
+    const table = $('#ahrefsTable');
+
+    $('thead input, thead select').on('input change', function() {
+        console.log("Filter Triggered");  // ✅ Confirm filter triggers
+
+        let filters = {};
+
+        $('thead input').each(function() {
+            let field = $(this).attr('id').replace('filter-', '');
+            filters[field] = {
+                value: $(this).val().trim().toLowerCase(),
+                operator: $(`#operator-${field}`).val()
+            };
+            console.log(`Filter Applied: ${field}, Value: ${filters[field].value}, Operator: ${filters[field].operator}`);
+        });
+
+        table.find('tbody tr').each(function() {
+            let showRow = true;
+
+            for (let field in filters) {
+                let cellValue = $(this).find(`[data-field="${field}"]`).text().trim().toLowerCase();
+                let filterValue = filters[field].value;
+                let operator = filters[field].operator;
+
+                console.log(`Comparing: Cell(${cellValue}) with Filter(${filterValue})`);
+
+                if (!filterValue) continue;
+
+                if (!isNaN(cellValue) && !isNaN(filterValue)) {
+                    let cellNum = parseFloat(cellValue);
+                    let filterNum = parseFloat(filterValue);
+
+                    if (operator === 'greater' && !(cellNum > filterNum)) showRow = false;
+                    if (operator === 'less' && !(cellNum < filterNum)) showRow = false;
+                    if (operator === 'equals' && !(cellNum === filterNum)) showRow = false;
+                } else {
+                    if (operator === 'equals' && cellValue !== filterValue) showRow = false;
+                    if (operator === 'greater' && cellValue <= filterValue) showRow = false;
+                    if (operator === 'less' && cellValue >= filterValue) showRow = false;
+                }
+            }
+            $(this).toggle(showRow);
+        });
+    });
+});
+</script>
+{% endblock %}

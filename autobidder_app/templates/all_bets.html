@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load crispy_forms_filters %}
+{% load crispy_forms_tags %}
+
+{% block title %}All Bets{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2 class="mb-4">All Bets</h2>
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Domain Name</th>  <!-- Changed from Domain ID -->
+                <th>Expiration Date</th>
+                <th>Max Bet</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+            <tbody>
+    {% for bet, form in bets_with_forms %}
+    <tr>
+        <td>{{ bet.domain.name }}</td>
+        <td>{{ bet.expiration_date }}</td>
+        <td>{{ bet.max_bet }}</td>
+        <td class="text-nowrap align-middle">
+            <div class="d-flex align-items-center gap-2 flex-nowrap">
+                <form method="POST" action="{% url 'update_max_bet' bet.domain_id %}" class="mb-0 d-flex align-items-center">
+                    {% csrf_token %}
+                    <div class="me-2">
+                        {{ form.max_bet.as_widget }}
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                </form>
+                <a href="{% url 'delete_bet' bet.domain_id %}" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Are you sure you want to delete this bet?');">Delete</a>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+    </table>
+</div>
+{% endblock %}

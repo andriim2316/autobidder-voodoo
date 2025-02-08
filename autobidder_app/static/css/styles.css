@@ -1,0 +1,58 @@
+/* General styling for the body */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Container adjustments */
+.container {
+    margin: 20px auto;
+    padding: 20px;
+    max-width: 95%;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Prevent content overflow */
+.overflow-x-auto {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Button custom styles */
+button.btn-secondary {
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+button.btn-secondary:hover {
+    background-color: #5a6268;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Form elements alignment */
+.d-flex {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+td.text-nowrap {
+    white-space: nowrap !important;
+}
+
+th, td {
+    white-space: nowrap; /* Prevent text wrapping in columns */
+    overflow: hidden;
+}
+
+.text-truncate {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
