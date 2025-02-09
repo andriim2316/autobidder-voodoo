@@ -34,7 +34,7 @@ logger = setup_logger("bet_processor", log_directory="logs/make_bets", days=7)
 
 class BetProcessor(Authenticator):
     def __init__(self, domain_id=None):
-        super().__init__()  # Initialize AuthenticatorMixin
+        super().__init__()
         if domain_id:
             self.bets = Bet.objects.select_related('domain').filter(domain__domain_id=domain_id)
             logger.info(f"BetProcessor initialized for a single domain ID: {domain_id}.")
@@ -84,7 +84,7 @@ class BetProcessor(Authenticator):
         logger.info(f"Current bid {input_value} is sufficient for domain ID {domain_id} ({domain_name}). No action needed.")
         return None
 
-    def get_int_value(self, element):
+    def get_int_value(self, element):  #our current bet, not bet if none
         """Extract integer value from HTML element."""
         if element and element.has_attr('value'):
             try:
@@ -138,7 +138,7 @@ class BetProcessor(Authenticator):
         """Process all bets or a specific domain if provided."""
         logger.info("Starting bet processing.")
 
-        if not self.is_logged_in() and not self.login():
+        if not self.is_logged_in() and not self.login(): #if logged in self login is not called
             logger.error("Skipping all bets - Unable to authenticate.")
             return
 

@@ -21,7 +21,7 @@ async def send_bet_exceeded_message(domain_name, current_bet, max_bet, domain_id
         [InlineKeyboardButton(text="+ 1000 UAH", callback_data=f"increase_1000_{domain_id}_{current_bet}")]
     ])
 
-    async with bot:  # Ensures proper session management
+    async with bot:
         await bot.send_message(
             GROUP_CHAT_ID,
             f"⚠️ Current bet ({current_bet} UAH) exceeds our max bet ({max_bet} UAH).\n"

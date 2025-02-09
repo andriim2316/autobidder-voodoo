@@ -65,20 +65,9 @@ def ahrefs_data_view(request):
     start_date = make_aware(datetime.strptime(start_date_str, "%Y-%m-%d"))
     end_date = make_aware(datetime.strptime(end_date_str, "%Y-%m-%d")) + timedelta(days=1) - timedelta(seconds=1)
 
-    # Визначення сортування
-    sort_field = request.GET.get('sort', 'domain__expiration_date')
-    sort_order = request.GET.get('order', 'asc')
-
-    valid_fields = [field[0] for field in fields] + ['domain__expiration_date']
-    if sort_field not in valid_fields:
-        sort_field = 'domain__expiration_date'
-
-    order_by = F(sort_field).asc() if sort_order == 'asc' else F(sort_field).desc()
-
-    # Отримання даних AhrefsData
     ahrefs_data = AhrefsData.objects.select_related('domain').filter(
         domain__expiration_date__range=[start_date, end_date]
-    ).order_by(order_by).values(
+    ).values(
         'domain__domain_id',
         'domain__name',
         'domain__expiration_date',
@@ -102,8 +91,6 @@ def ahrefs_data_view(request):
     context = {
         'fields': fields,
         'ahrefs_data': formatted_data,
-        'sort_field': sort_field,
-        'sort_order': sort_order,
         'start_date': start_date_str,
         'end_date': end_date_str,
         'form': form,

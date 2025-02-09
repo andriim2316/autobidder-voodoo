@@ -1,8 +1,10 @@
 import asyncio
 import aiohttp
 from decouple import config
+
 from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
+
 from autobidder_app.models import Domain, AhrefsData
 from autobidder_app.utils.logger import setup_logger
 
@@ -13,10 +15,10 @@ logger = setup_logger("ahrefs_data", log_directory="logs/ahrefs", days=7)
 class AhrefsFetcher:
     def __init__(self):
         self.api_token = config("AHREFS_API")
-        self.semaphore = asyncio.Semaphore(20)
+
 
     async def fetch_data(self, session, domain):
-        async with asyncio.Semaphore(100):  # Always limiting to 100 concurrent requests
+        async with asyncio.Semaphore(100):
             try:
                 logger.info(f"Getting data for domain: {domain}")
 
@@ -78,8 +80,6 @@ class AhrefsDataUpdater:
         self.fetcher = AhrefsFetcher()
 
     async def update_ahrefs_data(self):
-        """Get and update Ahrefs data only for domains which are not processed already."""
-        # Get domains that are NOT in the AhrefsData table
         domains_to_update = await sync_to_async(
             lambda: list(Domain.objects.filter(ahrefs_data__isnull=True).values_list("name", flat=True))
         )()
@@ -87,12 +87,19 @@ class AhrefsDataUpdater:
 
         results = await self.fetcher.fetch_all(domains_to_update)
 
-        # Update the database with the  data
+        ahrefs_data_objects = []
+
         for domain_name, data in zip(domains_to_update, results):
             if data:
-                await sync_to_async(self.update_or_create_ahrefs_data)(domain_name, data)
+                domain = await sync_to_async(Domain.objects.get)(name=domain_name)
+                ahrefs_data = AhrefsData(domain=domain, **data)
+                ahrefs_data_objects.append(ahrefs_data)
 
-    @staticmethod
+        if ahrefs_data_objects:
+            await sync_to_async(AhrefsData.objects.bulk_create)(ahrefs_data_objects)
+            logger.info(f"Successfully added {len(ahrefs_data_objects)} entries to the database.")
+
+    @staticmethod #not used
     def update_or_create_ahrefs_data(domain_name, data):
         """Update or create Ahrefs data"""
         domain = Domain.objects.get(name=domain_name)
